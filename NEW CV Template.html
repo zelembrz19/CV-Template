@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Editable CV with Database</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+      color: #222;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 48px auto 48px auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.13);
+      padding: 0 0 40px 0;
+      overflow: hidden;
+    }
+    header {
+      background: linear-gradient(90deg, #0074d9 0%, #00c3e3 100%);
+      color: #fff;
+      padding: 38px 40px 32px 40px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      border-bottom: 1px solid #e4e4e4;
+    }
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 36px;
+      border: 4px solid #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      background: #eee;
+    }
+    .header-info {
+      flex: 1;
+      min-width: 220px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5em;
+      color: #fff;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .title {
+      font-size: 1.25em;
+      color: #e0f7fa;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+    .contact {
+      font-size: 1.07em;
+      color: #e0f7fa;
+      margin-top: 6px;
+    }
+    .contact a {
+      color: #e0f7fa;
+      text-decoration: underline dotted;
+      transition: color 0.2s;
+    }
+    .contact a:hover {
+      color: #fff;
+    }
+    main {
+      padding: 0 40px;
+    }
+    section {
+      margin-bottom: 38px;
+    }
+    h2 {
+      font-size: 1.3em;
+      color: #0074d9;
+      margin-bottom: 16px;
+      border-left: 5px solid #00c3e3;
+      padding-left: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    .skills-list, .lang-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .skills-list li, .lang-list li {
+      background: #eaf4fb;
+      color: #0074d9;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 1em;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .exp-item, .edu-item {
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .exp-title, .edu-title {
+      font-weight: 600;
+      font-size: 1.1em;
+      color: #005baa;
+    }
+    .exp-meta, .edu-meta {
+      color: #666;
+      font-size: 0.99em;
+      margin-bottom: 4px;
+    }
+    .exp-desc, .edu-desc {
+      margin: 0;
+      color: #333;
+      font-size: 1em;
+    }
+    .download-btn, .edit-btn {
+      display: inline-block;
+      background: linear-gradient(90deg, #0074d9 0%, #00c3e3 100%);
+      color: #fff;
+      padding: 10px 26px;
+      border-radius: 22px;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 10px 8px 0 0;
+      transition: background 0.2s, box-shadow 0.2s;
+      border: none;
+      font-size: 1.07em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      cursor: pointer;
+    }
+    .download-btn:hover, .edit-btn:hover {
+      background: linear-gradient(90deg, #005baa 0%, #00a7c7 100%);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.13);
+    }
+    #editPanel {
+      display: none;
+      margin: 0 40px 0 40px;
+      background: #f6faff;
+      border: 1px solid #b5e2fa;
+      border-radius: 12px;
+      padding: 32px 24px 18px 24px;
+      box-shadow: 0 2px 8px rgba(0,183,255,0.07);
+    }
+    #editPanel input, #editPanel textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 13px;
+      border: 1px solid #b5e2fa;
+      border-radius: 6px;
+      font-size: 1em;
+      background: #fafdff;
+      transition: border 0.2s;
+    }
+    #editPanel input:focus, #editPanel textarea:focus {
+      border: 1.5px solid #00c3e3;
+      outline: none;
+    }
+    #editPanel label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+      color: #005baa;
+    }
+    #editPanel .section-title {
+      margin-top: 22px;
+      color: #0074d9;
+      font-size: 1.1em;
+      font-weight: 600;
+    }
+    @media (max-width: 700px) {
+      .container { padding: 0 0 32px 0; }
+      header { flex-direction: column; align-items: flex-start; padding: 30px 16px 22px 16px; }
+      .avatar { margin-bottom: 18px; margin-right: 0; }
+      main, #editPanel { padding: 0 12px; margin: 0 0 0 0; }
+    }
+    @media print {
+      .edit-btn, .download-btn, #importFile {
+        display: none !important;
+      }
+      #editPanel {
+        display: none !important;
+      }
+      body {
+        background: #fff !important;
+      }
+      .container {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="padding: 24px 40px 0 40px;">
+      <button class="edit-btn" onclick="showEditPanel()">Edit CV</button>
+      <button class="edit-btn" onclick="exportData()">Export Data</button>
+      <input type="file" id="importFile" style="display:none;" onchange="importData(event)">
+      <button class="edit-btn" onclick="document.getElementById('importFile').click()">Import Data</button>
+      <button class="download-btn" onclick="window.print();return false;">Download as PDF</button>
+    </div>
+    <header>
+      <img id="cvAvatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Your Photo" class="avatar">
+      <div class="header-info">
+        <h1 id="cvName">Your Name</h1>
+        <div class="title" id="cvTitle">Your Profession / Job Title</div>
+        <div class="contact" id="cvContact">
+          <span>📧 <a id="cvEmail" href="mailto:your.email@example.com">your.email@example.com</a></span> |
+          <span id="cvPhone">📞 +123 456 7890</span> |
+          <span id="cvLocation">🌍 City, Country</span> <br>
+          <span>
+            <a id="cvLinkedin" href="https://www.linkedin.com/in/yourprofile" target="_blank">LinkedIn</a> |
+            <a id="cvGithub" href="https://github.com/yourusername" target="_blank">GitHub</a>
+          </span>
+        </div>
+      </div>
+    </header>
+    <main>
+      <section>
+        <h2>Profile</h2>
+        <p id="cvProfile">
+          Motivated and results-driven professional with X+ years of experience in [your field]. Skilled in [key skills/technologies]. Passionate about delivering high-quality work and continuous professional growth.
+        </p>
+      </section>
+      <section>
+        <h2>Skills</h2>
+        <ul class="skills-list" id="cvSkills">
+          <li>Skill One</li>
+          <li>Skill Two</li>
+          <li>Skill Three</li>
+          <li>Skill Four</li>
+          <li>Skill Five</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Experience</h2>
+        <div id="cvExperience">
+          <div class="exp-item">
+            <div class="exp-title">Job Title – Company Name</div>
+            <div class="exp-meta">Jan 2022 – Present | City, Country</div>
+            <div class="exp-desc">
+              <ul>
+                <li>Describe your main responsibilities and achievements.</li>
+                <li>Use bullet points for clarity and impact.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="exp-item">
+            <div class="exp-title">Previous Job Title – Previous Company</div>
+            <div class="exp-meta">2019 – 2021 | City, Country</div>
+            <div class="exp-desc">
+              <ul>
+                <li>Key achievement or responsibility.</li>
+                <li>Another relevant point.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>Education</h2>
+        <div id="cvEducation">
+          <div class="edu-item">
+            <div class="edu-title">Degree, Field of Study</div>
+            <div class="edu-meta">University Name, 2015 – 2019</div>
+            <div class="edu-desc">Brief description or relevant coursework.</div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>Languages</h2>
+        <ul class="lang-list" id="cvLanguages">
+          <li>English (Fluent)</li>
+          <li>German (Intermediate)</li>
+          <li>Croatian (Native)</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Certifications</h2>
+        <ul id="cvCerts">
+          <li>Certification Name – Issuer (Year)</li>
+          <li>Certification Name – Issuer (Year)</li>
+        </ul>
+      </section>
+      <section>
+        <h2>References</h2>
+        <p id="cvReferences">Available upon request.</p>
+      </section>
+    </main>
+    <!-- EDIT PANEL -->
+    <div id="editPanel">
+      <h2>Edit CV</h2>
+      <form onsubmit="saveCV(event)">
+        <label>Photo URL: <input type="text" id="editAvatar"></label>
+        <label>Name: <input type="text" id="editName"></label>
+        <label>Title/Profession: <input type="text" id="editTitle"></label>
+        <label>Email: <input type="email" id="editEmail"></label>
+        <label>Phone: <input type="text" id="editPhone"></label>
+        <label>Location: <input type="text" id="editLocation"></label>
+        <label>LinkedIn URL: <input type="text" id="editLinkedin"></label>
+        <label>GitHub URL: <input type="text" id="editGithub"></label>
+        <label class="section-title">Profile:</label>
+        <textarea id="editProfile" rows="3"></textarea>
+        <label class="section-title">Skills (comma separated):</label>
+        <input type="text" id="editSkills">
+        <label class="section-title">Experience (HTML allowed):</label>
+        <textarea id="editExperience" rows="6"></textarea>
+        <label class="section-title">Education (HTML allowed):</label>
+        <textarea id="editEducation" rows="4"></textarea>
+        <label class="section-title">Languages (comma separated):</label>
+        <input type="text" id="editLanguages">
+        <label class="section-title">Certifications (one per line):</label>
+        <textarea id="editCerts" rows="3"></textarea>
+        <label class="section-title">References:</label>
+        <input type="text" id="editReferences">
+        <button class="download-btn" type="submit">Save</button>
+        <button class="edit-btn" type="button" onclick="hideEditPanel()">Cancel</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    // --- Load CV data from localStorage or defaults ---
+    let cvData = JSON.parse(localStorage.getItem('cvData')) || {
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+      name: "Your Name",
+      title: "Your Profession / Job Title",
+      email: "your.email@example.com",
+      phone: "+123 456 7890",
+      location: "City, Country",
+      linkedin: "https://www.linkedin.com/in/yourprofile",
+      github: "https://github.com/yourusername",
+      profile: "Motivated and results-driven professional with X+ years of experience in [your field]. Skilled in [key skills/technologies]. Passionate about delivering high-quality work and continuous professional growth.",
+      skills: ["Skill One", "Skill Two", "Skill Three", "Skill Four", "Skill Five"],
+      experience: `<div class="exp-item">
+          <div class="exp-title">Job Title – Company Name</div>
+          <div class="exp-meta">Jan 2022 – Present | City, Country</div>
+          <div class="exp-desc">
+            <ul>
+              <li>Describe your main responsibilities and achievements.</li>
+              <li>Use bullet points for clarity and impact.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="exp-item">
+          <div class="exp-title">Previous Job Title – Previous Company</div>
+          <div class="exp-meta">2019 – 2021 | City, Country</div>
+          <div class="exp-desc">
+            <ul>
+              <li>Key achievement or responsibility.</li>
+              <li>Another relevant point.</li>
+            </ul>
+          </div>
+        </div>`,
+      education: `<div class="edu-item">
+          <div class="edu-title">Degree, Field of Study</div>
+          <div class="edu-meta">University Name, 2015 – 2019</div>
+          <div class="edu-desc">Brief description or relevant coursework.</div>
+        </div>`,
+      languages: ["English (Fluent)", "German (Intermediate)", "Croatian (Native)"],
+      certs: ["Certification Name – Issuer (Year)", "Certification Name – Issuer (Year)"],
+      references: "Available upon request."
+    };
+
+    function saveCVData() {
+      localStorage.setItem('cvData', JSON.stringify(cvData));
+    }
+
+    function renderCV() {
+      document.getElementById('cvAvatar').src = cvData.avatar;
+      document.getElementById('cvName').textContent = cvData.name;
+      document.getElementById('cvTitle').textContent = cvData.title;
+      document.getElementById('cvEmail').textContent = cvData.email;
+      document.getElementById('cvEmail').href = "mailto:" + cvData.email;
+      document.getElementById('cvPhone').textContent = "📞 " + cvData.phone;
+      document.getElementById('cvLocation').textContent = "🌍 " + cvData.location;
+      document.getElementById('cvLinkedin').href = cvData.linkedin;
+      document.getElementById('cvGithub').href = cvData.github;
+      document.getElementById('cvProfile').textContent = cvData.profile;
+
+      // Skills
+      let skillsHTML = "";
+      cvData.skills.forEach(skill => skillsHTML += `<li>${skill}</li>`);
+      document.getElementById('cvSkills').innerHTML = skillsHTML;
+
+      // Experience
+      document.getElementById('cvExperience').innerHTML = cvData.experience;
+
+      // Education
+      document.getElementById('cvEducation').innerHTML = cvData.education;
+
+      // Languages
+      let langHTML = "";
+      cvData.languages.forEach(lang => langHTML += `<li>${lang}</li>`);
+      document.getElementById('cvLanguages').innerHTML = langHTML;
+
+      // Certifications
+      let certHTML = "";
+      cvData.certs.forEach(cert => certHTML += `<li>${cert}</li>`);
+      document.getElementById('cvCerts').innerHTML = certHTML;
+
+      // References
+      document.getElementById('cvReferences').textContent = cvData.references;
+    }
+
+    function showEditPanel() {
+      document.getElementById('editAvatar').value = cvData.avatar;
+      document.getElementById('editName').value = cvData.name;
+      document.getElementById('editTitle').value = cvData.title;
+      document.getElementById('editEmail').value = cvData.email;
+      document.getElementById('editPhone').value = cvData.phone;
+      document.getElementById('editLocation').value = cvData.location;
+      document.getElementById('editLinkedin').value = cvData.linkedin;
+      document.getElementById('editGithub').value = cvData.github;
+      document.getElementById('editProfile').value = cvData.profile;
+      document.getElementById('editSkills').value = cvData.skills.join(", ");
+      document.getElementById('editExperience').value = cvData.experience.replace(/<\/div>/g, "</div>\n");
+      document.getElementById('editEducation').value = cvData.education.replace(/<\/div>/g, "</div>\n");
+      document.getElementById('editLanguages').value = cvData.languages.join(", ");
+      document.getElementById('editCerts').value = cvData.certs.join("\n");
+      document.getElementById('editReferences').value = cvData.references;
+      document.getElementById('editPanel').style.display = "block";
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    function hideEditPanel() {
+      document.getElementById('editPanel').style.display = "none";
+    }
+    function saveCV(event) {
+      event.preventDefault();
+      cvData.avatar = document.getElementById('editAvatar').value;
+      cvData.name = document.getElementById('editName').value;
+      cvData.title = document.getElementById('editTitle').value;
+      cvData.email = document.getElementById('editEmail').value;
+      cvData.phone = document.getElementById('editPhone').value;
+      cvData.location = document.getElementById('editLocation').value;
+      cvData.linkedin = document.getElementById('editLinkedin').value;
+      cvData.github = document.getElementById('editGithub').value;
+      cvData.profile = document.getElementById('editProfile').value;
+      cvData.skills = document.getElementById('editSkills').value.split(",").map(s => s.trim()).filter(s => s);
+      cvData.experience = document.getElementById('editExperience').value;
+      cvData.education = document.getElementById('editEducation').value;
+      cvData.languages = document.getElementById('editLanguages').value.split(",").map(s => s.trim()).filter(s => s);
+      cvData.certs = document.getElementById('editCerts').value.split("\n").map(s => s.trim()).filter(s => s);
+      cvData.references = document.getElementById('editReferences').value;
+      saveCVData();
+      renderCV();
+      hideEditPanel();
+    }
+
+    // Export CV data as JSON file
+    function exportData() {
+      const dataStr = JSON.stringify(cvData);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cv_backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Import CV data from JSON file
+    function importData(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        cvData = JSON.parse(e.target.result);
+        renderCV();
+        saveCVData();
+        alert('Data imported!');
+      };
+      reader.readAsText(file);
+    }
+
+    renderCV();
+  </script>
+</body>
+</html>
